@@ -1,0 +1,56 @@
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+public class Conexion {
+    private static Conexion db;
+    private Connection con;
+    private PreparedStatement preparedStatement;
+
+    private static final String url = "jdbc:mysql://localhost:3306/";
+    private static final String dbName = "sistema";
+    private static final String driver = "com.mysql.jdbc.Driver";
+    private static final String userName = "root";
+    private static final String password = "";
+
+    private Conexion() throws SQLException {
+        try {
+            Class.forName(driver);
+            con = DriverManager.getConnection(url + dbName, userName, password);
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new SQLException("Error al establecer la conexión", e);
+        }
+    }
+
+    public static synchronized Conexion getConexion() throws SQLException {
+        if (db == null) {
+            db = new Conexion();
+        }
+        return db;
+    }
+
+    public ResultSet query(String sql) throws SQLException {
+        preparedStatement = con.prepareStatement(sql);
+        return preparedStatement.executeQuery();
+    }
+
+    public int execute(String sql) throws SQLException {
+        preparedStatement = con.prepareStatement(sql);
+        return preparedStatement.executeUpdate();
+    }
+
+    public void cerrarConexion() {
+        try {
+            if (con != null && !con.isClosed()) {
+                con.close();
+            }
+            if (preparedStatement != null) {
+                preparedStatement.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
